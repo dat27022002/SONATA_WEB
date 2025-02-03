@@ -1,44 +1,164 @@
 import classNames from 'classnames/bind';
 import PropTypes from 'prop-types';
+import { useFormContext } from 'react-hook-form';
 
-import { forwardRef } from 'react';
 import styles from './Input.module.scss';
+import IconCustom from '../IconCustom';
+import RadioInput from './RadioInput';
+import Dropdown from './DropDown';
+import RangeTime from './RangeTime';
+import CheckboxInput from './CheckboxInput';
+import { formatNumberWithDots } from '~/utils/common';
 
 const cx = classNames.bind(styles);
 
-const Input = forwardRef(({ label, type, textArea, className, errolMesseage, ...passProps }, ref) => {
+const Input = ({
+    labelIcon,
+    icon,
+    iconRightInput,
+    radioInput,
+    checkboxInput,
+    dropDown,
+    rangeTime,
+    paddingLabel,
+    boldLabel,
+    widthInput,
+    labelClassName,
+    custom,
+    ComponentCustom,
+    name,
+    placeholder = '',
+    typeCustom,
+    required,
+    label,
+    disabled = false,
+    className,
+    inputClassName,
+    listOptions = [],
+    type = '',
+    top = false,
+    ...passProps
+}) => {
     const Props = { ...passProps };
 
-    const Icon = label;
+    const {
+        register,
+        formState: { errors },
+        watch,
+        setValue,
+    } = useFormContext();
 
-    const classes = cx('flex items-center mb-8', {
-        [className]: className,
-    });
+    const error = errors[name]?.message;
+
+    const handleValidate = () => {
+        if (typeCustom === 'number') {
+            const newValue = formatNumberWithDots(watch(name));
+            setValue(name, newValue);
+        }
+    };
 
     return (
-        <div className={classes}>
-            {label && <Icon color="#333333" className={cx('text-sm mr-2')} />}
-            <input
-                className={cx(
-                    'w-full px-1 ',
-                    'border-b-2 border-b-[#a8a8a8] border-solid border-t-0 border-l-0 border-r-0 ',
+        <div
+            className={cx('mt-2 flex items-center text-[13px]', error && 'mb-[20px]', {
+                [className]: className,
+            })}
+        >
+            {/* icon left input */}
+            {icon && <IconCustom icon={icon} className={cx('mr-2 text-sm')} />}
+            {/* label */}
+            {(label || labelIcon) && (
+                <label
+                    className={cx(
+                        paddingLabel ? 'pr-2' : 'mr-2 w-24',
+                        required && 'font-semibold text-red-600',
+                        boldLabel && 'font-semibold',
+                        { [labelClassName]: labelClassName },
+                    )}
+                >
+                    {label ? label : <IconCustom icon={labelIcon} />}
+                </label>
+            )}
+            <div className={cx('relative', !widthInput && 'flex-1')}>
+                {!radioInput && !dropDown && !rangeTime && !custom && !checkboxInput && (
+                    <div className={cx('flex flex-1 items-center')}>
+                        <input
+                            autoComplete={name}
+                            id={name}
+                            type={type}
+                            {...register(name, { onChange: handleValidate })}
+                            placeholder={placeholder}
+                            style={{ width: widthInput }}
+                            required={required}
+                            disabled={disabled}
+                            className={cx(
+                                'p-1',
+                                !widthInput && 'flex-1',
+                                // borderBottom
+                                //     ? 'border-b-2 border-l-0 border-r-0 border-t-0 border-solid border-b-[#a8a8a8]'
+                                //     : 'rounded border-[1px] border-solid border-slate-400',
+                                'rounded border-[1px] border-solid border-slate-400',
+                                disabled && 'bg-slate-100',
+                                error && '!border-red-500',
+                                { [inputClassName]: inputClassName },
+                            )}
+                            {...Props}
+                        />
+
+                        {iconRightInput && (
+                            <div
+                                className={cx(
+                                    'z-10 ml-[-3px] h-[29px] w-[29px] rounded-r bg-gray-300',
+                                    'flex items-center justify-center',
+                                    'cursor-pointer hover:bg-primary-color',
+                                )}
+                            >
+                                <IconCustom icon={iconRightInput} />
+                            </div>
+                        )}
+                    </div>
                 )}
-                type={type || 'text'}
-                ref={ref}
-                {...Props}
-            />
-            {errolMesseage && <span className={cx('text-sm text-red-600')}>{errolMesseage}</span>}
+                {(radioInput || dropDown || rangeTime || custom || checkboxInput) && (
+                    <div className={cx('flex items-center', !widthInput && 'flex-1')} style={{ width: widthInput }}>
+                        {radioInput && <RadioInput listOptions={listOptions} className={cx('flex-1')} />}
+                        {checkboxInput && <CheckboxInput listOptions={listOptions} className={cx('flex-1')} />}
+                        {dropDown && <Dropdown listOptions={listOptions} className={cx('flex-1')} />}
+                        {rangeTime && <RangeTime />}
+
+                        {custom && <ComponentCustom />}
+                    </div>
+                )}
+                {error ? (
+                    <div className={cx('absolute bottom-[-20px] text-[12px] text-red-600')}>{error}</div>
+                ) : (
+                    <div className={cx('h-6px]')}></div>
+                )}
+            </div>
         </div>
     );
-});
+};
 
 Input.propTypes = {
-    label: PropTypes.func,
-    textArea: PropTypes.bool,
+    label: PropTypes.string,
+    labelIcon: PropTypes.func,
     type: PropTypes.string,
+    errolMesseage: PropTypes.string,
     className: PropTypes.string,
-    data: PropTypes.string,
-    setData: PropTypes.func,
+    labelClassName: PropTypes.string,
+    disabled: PropTypes.bool,
+    icon: PropTypes.func,
+    iconRightInput: PropTypes.func,
+    required: PropTypes.bool,
+    radioInput: PropTypes.bool,
+    checkboxInput: PropTypes.bool,
+    dropDown: PropTypes.bool,
+    rangeTime: PropTypes.bool,
+    listOptions: PropTypes.array,
+    custom: PropTypes.bool,
+    ComponentCustom: PropTypes.func,
+    name: PropTypes.string,
+    placeholder: PropTypes.string,
+    typeCustom: PropTypes.string,
+    inputClassName: PropTypes.string,
 };
 
 export default Input;
